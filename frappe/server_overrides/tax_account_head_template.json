@@ -1,0 +1,29 @@
+
+   [ 
+      {
+        "account_name": "Malaysia Tourism Tax",
+        "parent_account": "Duties and Taxes",
+        "account_type": "Tax",
+        "tax_rate": 10
+      },
+      {
+        "account_name": "Malaysia SST Sales Tax",
+        "parent_account": "Duties and Taxes",
+        "account_type": "Tax",
+        "tax_rate": 0
+      },
+      {
+        "account_name": "Malaysia SST Service Tax",
+        "parent_account": "Duties and Taxes",
+        "account_type": "Tax",
+        "tax_rate": 0
+      },
+      {
+        "account_name": "Malaysia Sales & Service Tax",
+        "parent_account": "Duties and Taxes",
+        "account_type": "Tax",
+        "tax_rate": 0
+      }
+    
+  
+    ]

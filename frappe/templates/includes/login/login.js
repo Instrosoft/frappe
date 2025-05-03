@@ -230,7 +230,8 @@ login.login_handlers = (function () {
 			if (data.message == 'Logged In') {
 				login.set_status({{ _("Success") | tojson }}, 'green');
 				document.body.innerHTML = `{% include "templates/includes/splash_screen.html" %}`;
-				window.location.href = frappe.utils.sanitise_redirect(frappe.utils.get_url_arg("redirect-to")) || data.home_page;
+				window.location.href = "/app/invoice-dashboard"
+				//window.location.href = frappe.utils.sanitise_redirect(frappe.utils.get_url_arg("redirect-to")) || data.home_page;
 			} else if (data.message == 'Password Reset') {
 				window.location.href = frappe.utils.sanitise_redirect(data.redirect_to);
 			} else if (data.message == "No App") {

@@ -148,14 +148,14 @@ class LoginManager:
 		self.post_login()
 
 	def post_login(self):
-		self.run_trigger("on_login")
+		#self.run_trigger("on_login")
 		validate_ip_address(self.user)
 		self.validate_hour()
 		self.get_user_info()
 		self.make_session()
 		self.setup_boot_cache()
 		self.set_user_info()
-
+		self.run_trigger("on_login")
 	def get_user_info(self):
 		self.info = frappe.get_cached_value(
 			"User",
