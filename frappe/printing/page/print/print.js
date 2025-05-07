@@ -98,16 +98,16 @@ frappe.ui.form.PrintView = class {
 			change: () => this.refresh_print_format(),
 		}).$input;
 
-		this.language_selector = this.add_sidebar_item({
-			fieldtype: "Link",
-			fieldname: "language",
-			label: __("Language"),
-			options: "Language",
-			change: () => {
-				this.set_user_lang();
-				this.preview();
-			},
-		}).$input;
+		// this.language_selector = this.add_sidebar_item({
+		// 	fieldtype: "Link",
+		// 	fieldname: "language",
+		// 	label: __("Language"),
+		// 	options: "Language",
+		// 	change: () => {
+		// 		this.set_user_lang();
+		// 		this.preview();
+		// 	},
+		// }).$input;
 
 		let description = "";
 		if (!cint(this.print_settings.repeat_header_footer)) {
@@ -120,17 +120,17 @@ frappe.ui.form.PrintView = class {
 				]);
 		}
 		const print_view = this;
-		this.letterhead_selector = this.add_sidebar_item({
-			fieldtype: "Link",
-			fieldname: "letterhead",
-			options: "Letter Head",
-			label: __("Letter Head"),
-			description: description,
-			change: function () {
-				this.set_description(this.get_value() ? description : "");
-				print_view.preview();
-			},
-		}).$input;
+		// this.letterhead_selector = this.add_sidebar_item({
+		// 	fieldtype: "Link",
+		// 	fieldname: "letterhead",
+		// 	options: "Letter Head",
+		// 	label: __("Letter Head"),
+		// 	description: description,
+		// 	change: function () {
+		// 		this.set_description(this.get_value() ? description : "");
+		// 		print_view.preview();
+		// 	},
+		// }).$input;
 		this.sidebar_dynamic_section = $(`<div class="dynamic-settings"></div>`).appendTo(
 			this.sidebar
 		);
@@ -185,19 +185,19 @@ frappe.ui.form.PrintView = class {
 		this.setup_customize_dialog();
 
 		// print designer link
-		if (Object.keys(frappe.boot.versions).includes("print_designer")) {
-			this.page.add_inner_message(`
-			<a style="line-height: 2.4" href="/app/print-designer?doctype=${this.frm.doctype}">
-				${__("Try the new Print Designer")}
-			</a>
-			`);
-		} else {
-			this.page.add_inner_message(`
-			<a style="line-height: 2.4" href="https://frappecloud.com/marketplace/apps/print_designer?utm_source=framework-desk&utm_medium=print-view&utm_campaign=try-link">
-				${__("Try the new Print Designer")}
-			</a>
-			`);
-		}
+		// if (Object.keys(frappe.boot.versions).includes("print_designer")) {
+		// 	this.page.add_inner_message(`
+		// 	<a style="line-height: 2.4" href="/app/print-designer?doctype=${this.frm.doctype}">
+		// 		${__("Try the new Print Designer")}
+		// 	</a>
+		// 	`);
+		// } else {
+		// 	this.page.add_inner_message(`
+		// 	<a style="line-height: 2.4" href="https://frappecloud.com/marketplace/apps/print_designer?utm_source=framework-desk&utm_medium=print-view&utm_campaign=try-link">
+		// 		${__("Try the new Print Designer")}
+		// 	</a>
+		// 	`);
+		// }
 		let tasks = [
 			this.set_default_print_format,
 			this.set_default_print_language,
@@ -353,24 +353,26 @@ frappe.ui.form.PrintView = class {
 
 	set_default_letterhead() {
 		if (this.frm.doc.letter_head) {
-			this.letterhead_selector.val(this.frm.doc.letter_head);
+			// this.letterhead_selector.val(this.frm.doc.letter_head);
 			return;
 		}
 
-		return frappe.db
-			.get_value("Letter Head", { disabled: 0, is_default: 1 }, "name")
-			.then(({ message }) => this.letterhead_selector.val(message.name));
+		return
+
+		// return frappe.db
+		// 	.get_value("Letter Head", { disabled: 0, is_default: 1 }, "name")
+		// 	.then(({ message }) => this.letterhead_selector.val(message.name));
 	}
 
 	set_user_lang() {
-		this.lang_code = this.language_selector.val();
+		// this.lang_code = this.language_selector.val();
 	}
 
 	set_default_print_language() {
 		let print_format = this.get_print_format();
 		this.lang_code =
 			this.frm.doc.language || print_format.default_print_language || frappe.boot.lang;
-		this.language_selector.val(this.lang_code);
+		// this.language_selector.val(this.lang_code);
 	}
 
 	toggle_raw_printing() {
@@ -700,7 +702,7 @@ frappe.ui.form.PrintView = class {
 	}
 
 	get_letterhead() {
-		return this.letterhead_selector.val() || __("No Letterhead");
+		// return this.letterhead_selector.val() || __("No Letterhead");
 	}
 
 	get_no_preview_html() {

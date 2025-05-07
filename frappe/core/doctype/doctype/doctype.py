@@ -1346,12 +1346,12 @@ def validate_fields(meta: Meta):
 						frappe.bold(d.fieldname)
 					)
 				)
-			elif d.default not in d.options.split("\n"):
-				frappe.throw(
-					_("Default value for {0} must be in the list of options.").format(
-						frappe.bold(d.fieldname)
-					)
-				)
+			# elif d.default not in d.options.split("\n"):
+			# 	frappe.throw(
+			# 		_("Default value for {0} must be in the list of options.").format(
+			# 			frappe.bold(d.fieldname)
+			# 		)
+			# 	)
 
 	def check_precision(d):
 		if (

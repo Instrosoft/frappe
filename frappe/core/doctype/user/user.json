@@ -719,6 +719,7 @@
    "label": "User Details"
   },
   {
+   "depends_on": "eval: frappe.session.user===\"Administrator\"",
    "fieldname": "roles_permissions_tab",
    "fieldtype": "Tab Break",
    "label": "Roles & Permissions"
@@ -861,7 +862,7 @@
  "idx": 413,
  "image_field": "user_image",
  "links": [],
- "modified": "2025-04-26 17:58:23.577825",
+ "modified": "2025-05-08 01:24:47.383787",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "User",
