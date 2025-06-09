@@ -181,7 +181,7 @@ frappe.ui.Page = class Page {
 				);
 			})
 			.appendTo(this.sidebar);
-		$(".menu-btn-group")?.hide()
+		// $(".menu-btn-group")?.hide()
 	}
 
 	setup_sidebar_toggle() {

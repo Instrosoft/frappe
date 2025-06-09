@@ -105,8 +105,12 @@ frappe.router.on('change', function () {
 	$(".dropdown-notifications").remove();
 	$(".navbar .vertical-bar").remove();
 	$(".input-group")?.remove();
+	
+	
 	// To hide Search bar in Workspaces and Sales Invoice List and Form
 	const current_route = frappe.get_route();
+	if(current_route.length==3 && current_route[2]=="Report"){ $(".menu-btn-group")?.show() }
+	else { $(".menu-btn-group")?.hide(); }
 	// if (current_route[0] === "Workspaces" || current_route[1] === "Sales Invoice" ) {
 	// 	$(".input-group")?.hide();
 		
@@ -114,7 +118,7 @@ frappe.router.on('change', function () {
 	// else {
 	// 	$(".input-group")?.show();
 	// }
-
+	
 
 	// if (current_route[1] === "Sales Invoice" || current_route[1] === "Quotation" || current_route[1] === "Payment Entry" || current_route[1] === "Item" || current_route[1] === "Supplier"|| current_route[1] === "Purchase Invoice") {
 	// 	console.log($(".page-form"))

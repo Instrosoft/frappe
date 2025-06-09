@@ -1,6 +1,8 @@
 import frappe
 import os,json
 
+from frappe.data_api.data import create_legal_entity
+
 # def create_template(company, doctype):
 #     CURR_DIR = os.path.abspath(os.path.dirname(__file__))
 #     JSON_FILE_NAME = os.path.join(CURR_DIR,"tax_template.json")
@@ -101,6 +103,11 @@ def on_update(doc, method=None):
         payment_entry_naming_series_property_setter = get_options_property_setter(
         "Payment Entry","naming_series",f"OR-{doc.abbr}-.YYYY.-.MM.-.####")
         frappe.make_property_setter(payment_entry_naming_series_property_setter, validate_fields_for_doctype=False)
+
+    if doc.custom_legal_entity_created:
+        return
+    
+    create_legal_entity(doc)
 
 # Example setup for the accounts (to be created manually or via a script in ERPNext 15)
 def setup_accounts():

@@ -8,8 +8,9 @@ from frappe import _
 
 # TODO: Replace with actual base URL
 BASE_URL = "https://api.storecove.com/api/v2"
+
 # TODO: Replace with actual token
-TOKEN = "D8n9T5D1Qp5kfTvV9RR1vSxFV2rYYRXIiFDGaKJqzPk"
+TOKEN = "uM7Hg353lnC_ggQrcM5YGXdvIbP9xBMv2FLxNgMCLk0"
 
 ALLOWED_METHODS = frozenset(("POST", "GET"))
 SENSITIVE_INFO = frozenset(("Authorization",))
@@ -71,6 +72,7 @@ class MSDIRECTAPI:
 
         try:
             response = requests.request(method, **request_args)
+            frappe.log(response.content)
             try:
                 response_json = response.content.decode("utf-8")
                 
@@ -83,11 +85,6 @@ class MSDIRECTAPI:
                 if not response_json:
                     frappe.throw(_("Error parsing response: {0}").format(response.content))
 
-            # Raise special error for certain HTTP codes
-            self.handle_http_code(response.status_code)
-
-            # Raise HTTPError for other HTTP codes
-            response.raise_for_status()
 
             # Expect all successful responses to be JSON
             if not response_json:

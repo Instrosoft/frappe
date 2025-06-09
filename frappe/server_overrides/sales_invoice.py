@@ -33,6 +33,10 @@ def before_cancel(doc,method=None):
 def on_update(doc,method=None):
     if not doc.has_value_changed("workflow_state"):
         return
+    
+    if not frappe.db.get_value("Company",doc.company,"custom_enable_einvoicing"):
+        return
+
     if doc.workflow_state == "Pending":
         if doc.custom_validation_failure_reason == "failed" or doc.custom_validation_failure_reason:
             doc.db_set({"custom_api_status": "", "custom_validation_failure_reason": ""})
