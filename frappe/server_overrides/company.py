@@ -1,7 +1,7 @@
 import frappe
 import os,json
 
-from frappe.data_api.data import create_legal_entity
+from frappe.data_api.data import create_legal_entity, delete_legal_entity, update_legal_entity
 
 # def create_template(company, doctype):
 #     CURR_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -88,7 +88,9 @@ def create_account(company, doctype):
 
 
 def on_update(doc, method=None):
+    old_doc = doc.get_doc_before_save()
     if doc.get("_is_new"):
+        doc.db_set("custom_einvoicing_set", 1)
         create_account(doc,"Account")
         create_template(doc.company_name, "Sales Taxes and Charges Template")
         create_template(doc.company_name, "Purchase Taxes and Charges Template")
@@ -104,10 +106,21 @@ def on_update(doc, method=None):
         "Payment Entry","naming_series",f"OR-{doc.abbr}-.YYYY.-.MM.-.####")
         frappe.make_property_setter(payment_entry_naming_series_property_setter, validate_fields_for_doctype=False)
 
+    if not doc.custom_enable_einvoicing:
+        # doc.db_set("custom_business_registration_no", old_doc.custom_business_registration_no)
+        # doc.db_set("custom_business_tin_no", old_doc.custom_business_tin_no)
+        # doc.db_set("custom_business_registration_no", old_doc.custom_business_registration_no)
+        # doc.db_set("custom_business_type", old_doc.custom_business_type)
+        return
     if doc.custom_legal_entity_created:
+        update_legal_entity(doc, old_doc)
         return
     
     create_legal_entity(doc)
+
+def after_delete(doc, method=None):    
+    delete_legal_entity(doc)    
+
 
 # Example setup for the accounts (to be created manually or via a script in ERPNext 15)
 def setup_accounts():
@@ -155,3 +168,7 @@ def get_options_property_setter(doctype, fieldname, new_options, prepend=False):
         "property": "options",
         "value": options,
     }
+
+@frappe.whitelist()
+def is_einvoice_enabled(company):
+    return frappe.db.get_value("Company", company, "custom_enable_einvoicing")

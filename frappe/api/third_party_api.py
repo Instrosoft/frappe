@@ -12,7 +12,7 @@ BASE_URL = "https://api.storecove.com/api/v2"
 # TODO: Replace with actual token
 TOKEN = "uM7Hg353lnC_ggQrcM5YGXdvIbP9xBMv2FLxNgMCLk0"
 
-ALLOWED_METHODS = frozenset(("POST", "GET"))
+ALLOWED_METHODS = frozenset(("POST", "GET", "PATCH", "PUT", "DELETE"))
 SENSITIVE_INFO = frozenset(("Authorization",))
 
 
@@ -31,6 +31,9 @@ class MSDIRECTAPI:
 
     def get(self, *args, **kwargs):
         return self._make_request("GET", *args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        return self._make_request("DELETE", *args, **kwargs)
 
     def _make_request(
         self,
@@ -82,12 +85,16 @@ class MSDIRECTAPI:
                 # response_json = json.loads(response_text)
                 
             except Exception:
+                if not response.content:
+                    return
                 if not response_json:
                     frappe.throw(_("Error parsing response: {0}").format(response.content))
 
 
             # Expect all successful responses to be JSON
             if not response_json:
+                if not response.content:
+                    return
                 frappe.throw(_("Error parsing response: {0}").format(response.content))
 
             return response_json

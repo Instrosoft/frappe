@@ -1,3 +1,4 @@
+from datetime import datetime
 from frappe.api.third_party_api import MSDIRECTAPI
 import frappe
 import json, base64
@@ -5,6 +6,7 @@ import base64
 import json
 from frappe.utils import get_date_str
 import requests
+import re
 
 
 def get_document_evidence(document_submission_id):
@@ -81,48 +83,27 @@ def webhook_response():
     print("sales_invoice", sales_invoice)
     if sales_invoice:
         frappe.db.set_value(
-            "Sales Invoice", sales_invoice, "custom_api_status", payload["event"]
+            "Sales Invoice", sales_invoice, "custom_api_status", payload["event"].capitalize()
         )
     else:
         return
-    if payload["event"] == "cleared":
+    invoice_doc = frappe.get_doc("Sales Invoice", sales_invoice)
+    event = payload["event"].lower()
+    if event == "cleared" and invoice_doc.custom_buyer_type != "B2C":
         frappe.db.set_value(
             "Sales Invoice",
             sales_invoice,
             {
                 "custom_lhdn_comments": "The e-invoice is still awaiting validation from LHDN",
-                "custom_api_status": "Pending",
+                "custom_api_status": "Cleared",
             },
         )
-    if payload["event"] == "succeeded":
-        frappe.db.set_value("Sales Invoice", sales_invoice, "custom_lhdn_comments", "")
-        result = get_document_evidence(payload["guid"])
-        print("API RESULT IS ")
-        print(result)
-        if result:
-            document_id, long_id = result
-            # frappe.db.set_value("Sales Invoice", sales_invoice, "custom_long_id", long_id)
-            # frappe.db.set_value("Sales Invoice", sales_invoice, "custom_uuid", document_id)
-            validation_url = (
-                f"https://preprod.myinvois.hasil.gov.my/{document_id}/share/{long_id}"
-            )
-            print(validation_url)
-            frappe.db.set_value(
-                "Sales Invoice", sales_invoice, "custom_invoice_url", validation_url
-            )
-            frappe.db.set_value(
-                "Sales Invoice",
-                sales_invoice,
-                {
-                    "custom_long_id": long_id,
-                    "custom_uuid": document_id,
-                    "workflow_state": "Success",
-                    "docstatus": 1,
-                    "status": "Unpaid",
-                },
-            )
+    elif event == "cleared" and invoice_doc.custom_buyer_type == "B2C":
+        run_success_flow(sales_invoice, payload)
+    if event == "succeeded":
+        run_success_flow(sales_invoice, payload)
 
-    if payload["event"] == "failed":
+    if event == "failed":
         frappe.db.set_value(
             "Sales Invoice",
             sales_invoice,
@@ -149,6 +130,32 @@ def webhook_response():
             failure_message,
         )
 
+def run_success_flow(sales_invoice, payload):
+    frappe.db.set_value("Sales Invoice", sales_invoice, "custom_lhdn_comments", "")
+    result = get_document_evidence(payload["guid"])
+    print("API RESULT IS ")
+    print(result)
+    if result:
+        document_id, long_id = result
+        validation_url = (
+            f"https://preprod.myinvois.hasil.gov.my/{document_id}/share/{long_id}"
+        )
+        frappe.db.set_value(
+            "Sales Invoice", sales_invoice, "custom_invoice_url", validation_url
+        )
+        frappe.db.set_value(
+            "Sales Invoice",
+            sales_invoice,
+            {
+                "custom_long_id": long_id,
+                "custom_uuid": document_id,
+                "workflow_state": "Success",
+                "docstatus": 1,
+                "status": "Unpaid",
+            },
+        )
+
+
 
 @frappe.whitelist(allow_guest=True)
 def received_document():
@@ -157,8 +164,6 @@ def received_document():
 
 
 def format_time(time_str):
-    from datetime import datetime
-
     time_obj = datetime.strptime(time_str, "%H:%M:%S.%f")
     return time_obj.strftime("%H:%M:%S")
 
@@ -200,110 +205,100 @@ def get_invoice(invoice):
     total_tax_amount = {}
     user = frappe.get_doc("User", invoice.owner)
 
-    print("First Name:", user.first_name, user.last_name)
-    print("Email:", user.email)
-    print("Roles:", [role.role for role in user.roles])
-    print("Last Login:", user.last_login)
-    print("User Image URL:", user.user_image)
-
-    # Check if taxes exist
     has_taxes = bool(invoice.get("taxes"))
+    item_tax_detail = json.loads(invoice.taxes[0].item_wise_tax_detail) if has_taxes else {}
 
-    # Grouping invoice lines by tax rate and category dynamically
     for item in invoice.items:
-        if has_taxes:
-            item_tax_detail = invoice.taxes[0].item_wise_tax_detail
-            tax_details = json.loads(item_tax_detail)
-            item_code = item.item_code
-            item_tax_percentage = tax_details.get(item_code, [0, 0])[
-                0
-            ]  # [percentage, amount]
-        else:
-            item_tax_percentage = 0  # No tax applied
+        item_code = item.item_code
+        item_net_amount = item.net_amount or item.amount
+        item_rate = item.rate
+        item_qty = item.qty
 
-        tax_key = (item_tax_percentage, "service" if has_taxes else "exempt", "MY")
-        taxable_amount = round_two_decimals(item.rate)
-        total_taxable_amount[tax_key] = (
-            total_taxable_amount.get(tax_key, 0) + taxable_amount
-        )
-        tax_amount = round_two_decimals(taxable_amount * (item_tax_percentage / 100))
+        if has_taxes:
+            tax_info = item_tax_detail.get(item_code, [0, 0])
+            tax_percentage = tax_info[0]
+            tax_amount = tax_info[1]
+        else:
+            tax_percentage = 0
+            tax_amount = 0
+
+        tax_key = (tax_percentage, "service" if has_taxes else "exempt", "MY")
+        total_taxable_amount[tax_key] = total_taxable_amount.get(tax_key, 0) + item_net_amount
         total_tax_amount[tax_key] = total_tax_amount.get(tax_key, 0) + tax_amount
 
-        # Build invoice line
-        invoice_lines.append(
-            {
-                "lineId": str(item.idx),
-                "amountExcludingVat": taxable_amount,
-                "itemPrice": round_two_decimals(item.rate),
-                "baseQuantity": item.qty,
-                "quantity": item.qty,
-                "tax": {
-                    "percentage": item_tax_percentage,
-                    "country": "MY",
-                    "category": "service" if has_taxes else "exempt",
+        classification_code = "022"
+        if invoice.custom_item_classification:
+            match = re.match(r"(\d{3}):", invoice.custom_item_classification.strip())
+            if match:
+                classification_code = match.group(1)
+
+        invoice_lines.append({
+            "lineId": str(item.idx),
+            "amountExcludingTax": round_two_decimals(item_net_amount),
+            "itemPrice": round_two_decimals(item_rate),
+            "baseQuantity": 1,
+            "quantity": item_qty,
+            "tax": {
+                "percentage": tax_percentage,
+                "country": "MY",
+                "category": "service" if has_taxes else "exempt",
+            },
+            "references": [
+                {
+                    "documentType": "item_classification_code",
+                    "documentIdListId": "CLASS",
+                    "documentId": classification_code,
                 },
-                "references": [
-                    {
-                        "documentType": "item_classification_code",
-                        "documentIdListId": "PTC",
-                        "documentId": "123456",
-                    },
-                    {
-                        "documentType": "item_classification_code",
-                        "documentIdListId": "CLASS",
-                        "documentId": "003",
-                    },
-                ],
-                "name": item.item_name,
-                "description": item.description,
-            }
-        )
+            ],
+            "name": item.item_name,
+            "description": item.description,
+        })
 
-    # Build taxSubtotals based on dynamically calculated totals
     for (rate, category, country), taxable_amount in total_taxable_amount.items():
-        tax_subtotals.append(
-            {
-                "taxableAmount": round_two_decimals(taxable_amount),
-                "taxAmount": round_two_decimals(
-                    total_tax_amount[(rate, category, country)]
-                ),
-                "percentage": rate,
-                "country": country,
-                "category": category,
-            }
-        )
+        tax_subtotals.append({
+            "taxableAmount": round_two_decimals(taxable_amount),
+            "taxAmount": round_two_decimals(total_tax_amount[(rate, category, country)]),
+            "percentage": rate,
+            "country": country,
+            "category": category,
+        })
 
-    # Calculate amountIncludingVat dynamically
-    amount_including_vat = round_two_decimals(
+    amount_including_tax = round_two_decimals(
         sum(total_taxable_amount.values()) + sum(total_tax_amount.values())
     )
+
     customer = frappe.get_doc("Customer", invoice.customer)
+    customer_buyer_type = customer.custom_buyer_type
     company = frappe.get_doc("Company", invoice.company)
-    # Generate invoice data dynamically
+    issue_time = datetime.now().strftime("%H:%M:%S")
+    timezone = "+0800"
+
+    routingEidentifier = []
+    if customer_buyer_type == "B2C" and customer.custom_mykadmytenterapassport_nomyprmykas_no:
+        routingEidentifier.append({"scheme": "MY:NRIC", "id": customer.custom_mykadmytenterapassport_nomyprmykas_no})
+    elif customer_buyer_type != "B2C" and customer.custom_business_registration_number:
+        routingEidentifier.append({"scheme": "MY:EIF", "id": customer.custom_business_registration_number})
+
+    accountingCustomerPartyPublicIdentifiers = []
+    if customer_buyer_type == "B2C" and customer.custom_tin_number:
+        accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:TIN", "id": customer.custom_tin_number})
+    elif customer_buyer_type != "B2C":
+        if customer.custom_tin_number:
+            accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:TIN", "id": customer.custom_tin_number})
+        if customer.custom_business_registration_number:
+            accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:EIF", "id": customer.custom_business_registration_number})
+
     data = {
         "legalEntityId": int(company.custom_legal_entity_id),
         "routing": {
-            "eIdentifiers": [
-                {"scheme": "MY:EIF", "id": company.custom_malaysia_einvoice_id},
-                {"scheme": "MY:TIN", "id": company.custom_business_tin_no},
-            ],
-            "networks": [
-                {
-                    "application": "my-lhdnm",
-                    "settings": {"enabled": True, "mock": False},
-                }
-            ],
+            "eIdentifiers": routingEidentifier,
+            "networks": [{"application": "my-lhdnm", "settings": {"enabled": True, "mock": False}}],
         },
-        "attachments": [
-            {
-                #   "filename": invoice.name,
-                "document": get_base64(invoice.name),
-                "mimeType": "application/pdf",
-                "primaryImage": True,
-                #   "documentId": invoice.name,
-                #   "description": "Invoice document with {{Long ID}} and {{QR Code}} placeholder tags"
-            }
-        ],
+        "attachments": [{
+            "document": get_base64(invoice.name),
+            "mimeType": "application/pdf",
+            "primaryImage": True,
+        }],
         "document": {
             "documentType": "invoice",
             "invoice": {
@@ -311,11 +306,11 @@ def get_invoice(invoice):
                 "documentCurrency": invoice.currency,
                 "invoiceNumber": invoice.name,
                 "issueDate": get_date_str(invoice.posting_date),
-                "issueTime": "00:07:59",
-                "timeZone": "+0800",
+                "issueTime": issue_time,
+                "timeZone": timezone,
                 "dueDate": get_date_str(invoice.custom_payment_due_date),
                 "accountingSupplierParty": {
-                    "classificationCode": "62010",
+                    "companyName": company.company_name,
                     "party": {
                         "contact": {
                             "email": company.custom_email_address,
@@ -328,7 +323,6 @@ def get_invoice(invoice):
                 "accountingCustomerParty": {
                     "party": {
                         "companyName": invoice.customer_name,
-                        "classificationCode": "62010",
                         "address": {
                             "street1": invoice.custom_address_line_1,
                             "street2": invoice.custom_address_line_2,
@@ -344,33 +338,20 @@ def get_invoice(invoice):
                             "phone": customer.custom_contact_number,
                         },
                     },
-                    "publicIdentifiers": [
-                        {"scheme": "MY:TIN", "id": customer.custom_tin_number},
-                        {
-                            "scheme": "MY:EIF",
-                            "id": customer.custom_business_registration_number,
-                        }
-                    ],
+                    "publicIdentifiers": accountingCustomerPartyPublicIdentifiers,
                 },
-                "paymentTerms": {
-                    "note": f"Payment within {invoice.custom_payment_due_days} days"
-                },
-                "paymentMeansArray": [
-                    {
-                        "code": "credit_transfer",
-                        "account": "1234567890123",
-                        "branche_code": "AAVVVVVV",
-                    }
-                ],
+                "paymentTerms": {"note": f"Payment within {invoice.custom_payment_due_days} days"},
+                "paymentMeansArray": [{
+                    "code": "standing_agreement"
+                }],
                 "invoiceLines": invoice_lines,
                 "taxSubtotals": tax_subtotals,
-                "amountIncludingVat": amount_including_vat,
+                "amountIncludingTax": amount_including_tax,
                 "prepaidAmount": round_two_decimals(invoice.base_paid_amount),
             },
         },
     }
 
-    print("\n\n**************************************************** Data \n\n", data)
     return data
 
 
@@ -408,14 +389,13 @@ def create_legal_entity(company):
     required_fields = (
         "name",
         "custom_address_line_1",
-        "custom_address_line_2",
         "custom_company_country",
         "custom_state",
         "custom_city",
         "custom_street_no",
         "custom_postal_code",
-        "custom_malaysia_einvoice_id",
-        "custom_msic_code"
+        "custom_business_registration_no",
+        "custom_msic_code",
     )
 
     for field in required_fields:
@@ -439,8 +419,6 @@ def create_legal_entity(company):
         "tenant_id": "",
         "public": True,
         "advertisements": ["invoice"],
-        # "third_party_username": null,
-        # "third_party_password": null,
         "acts_as_sender": True,
         "acts_as_receiver": True,
         "classification_code": company.custom_msic_code,
@@ -466,8 +444,18 @@ def create_legal_entity(company):
     id = response.id
     company.db_set("custom_legal_entity_id", id)
 
+    business_type_code = ""
+    if company.custom_business_type:
+        match = re.match(r"(\d{2}):", company.custom_business_type.strip())
+        if match:
+            business_type_code = match.group(1)
+        else:
+            frappe.throw(
+                "Invalid format for custom_business_type. Expected format: '01: SSM number'."
+            )
+
     data2 = {
-        "identifier": company.custom_malaysia_einvoice_id,
+        "identifier": f"{business_type_code}{company.custom_business_registration_no}",
         "scheme": "MY:EIF",
         "superscheme": "iso6523-actorid-upis",
     }
@@ -511,4 +499,147 @@ def create_legal_entity(company):
 
         frappe.throw(error_msg)
 
+    # Add MY:ROB identifier
+    data4 = {
+        "identifier": company.custom_business_registration_no,
+        "scheme": "MY:ROB",
+        "superscheme": "iso6523-actorid-upis",
+    }
+
+    response4 = MSDIRECTAPI().post(
+        data=json.dumps(data4),
+        endpoint=f"legal_entities/{id}/peppol_identifiers",
+        integration_request_service="Create Peppol Identifier",
+    )
+
+    response4 = frappe.parse_json(response4)
+
+    if response4.errors:
+        error_msg = response4.errors[0].get(
+            "details", "Error creating Peppol Identifier"
+        )
+        if "does not match format" in error_msg:
+            error_msg = "Please check the Malaysia e-invoice ID format"
+        frappe.throw(error_msg)
+
     company.db_set("custom_legal_entity_created", 1)
+
+    ## TODO: Add the logic to delete and update  the legal entity in Storecove
+
+
+def extract_business_type_code(business_type_str):
+    match = (
+        re.match(r"(\d{2}):", business_type_str.strip()) if business_type_str else None
+    )
+    return match and match.group(1) or ""
+
+
+def build_identifier(company, scheme):
+    if not company:
+        return None
+
+    if scheme == "MY:EIF":
+        if not company.custom_business_type or not company.custom_business_registration_no:
+            return None
+        return f"{extract_business_type_code(company.custom_business_type)}{company.custom_business_registration_no}"
+
+    elif scheme == "MY:TIN":
+        if not company.custom_business_tin_no:
+            return None
+        return company.custom_business_tin_no
+
+    elif scheme == "MY:ROB":
+        if not company.custom_business_registration_no:
+            return None
+        return company.custom_business_registration_no
+
+    return None
+
+
+def post_identifier(company, scheme, identifier):
+    data = {
+        "identifier": identifier,
+        "scheme": scheme,
+        "superscheme": "iso6523-actorid-upis",
+    }
+    MSDIRECTAPI().post(
+        data=json.dumps(data),
+        endpoint=f"legal_entities/{company.custom_legal_entity_id}/peppol_identifiers",
+        integration_request_service=f"Post Peppol Identifier {scheme}",
+    )
+
+
+def delete_identifier(company, scheme, identifier):
+    MSDIRECTAPI().delete(
+        endpoint=f"legal_entities/{company.custom_legal_entity_id}/peppol_identifiers/iso6523-actorid-upis/{scheme}/{identifier}",
+        integration_request_service=f"Delete Peppol Identifier {scheme}",
+    )
+
+
+@frappe.whitelist()
+def update_legal_entity(company, oldCompany):
+    required_fields = (
+        "name",
+        "custom_address_line_1",
+        "custom_company_country",
+        "custom_state",
+        "custom_city",
+        "custom_street_no",
+        "custom_postal_code",
+        "custom_business_registration_no",
+        "custom_msic_code",
+    )
+
+    for field in required_fields:
+        if not company.get(field):
+            label = (
+                company.meta.get_label(field)
+                if hasattr(company.meta, "get_label")
+                else field
+            )
+            frappe.throw(f"{label} is required to update legal entity")
+
+    schemes = ["MY:EIF", "MY:TIN", "MY:ROB"]
+
+    for scheme in schemes:
+        new_id = build_identifier(company, scheme)
+        old_id = build_identifier(oldCompany, scheme)
+
+        if new_id != old_id:
+            if old_id:
+                delete_identifier(company, scheme, old_id)
+            if new_id:
+                post_identifier(company, scheme, new_id)
+
+    company.db_set("custom_legal_entity_created", 1)
+
+
+@frappe.whitelist()
+def delete_legal_entity(doc):
+    if not doc.custom_legal_entity_created or not doc.custom_legal_entity_id:
+        return
+
+    schemes = ["MY:EIF", "MY:TIN", "MY:ROB"]
+    errors = []
+
+    for scheme in schemes:
+        identifier = build_identifier(doc, scheme)
+        if not identifier:
+            continue
+        try:
+            delete_identifier(doc, scheme, identifier)
+        except Exception as e:
+            errors.append(f"{scheme}: {str(e)}")
+
+    # Step 2: Abort if identifier deletion failed
+    if errors:
+        frappe.throw("Could not delete Peppol Identifiers:\n" + "\n".join(errors))
+
+    # Step 3: Delete the legal entity itself
+    try:
+        MSDIRECTAPI().delete(
+            endpoint=f"legal_entities/{doc.custom_legal_entity_id}",
+            integration_request_service="Delete Legal Entity",
+        )
+    except Exception as e:
+        frappe.throw(f"Could not delete Legal Entity: {str(e)}")

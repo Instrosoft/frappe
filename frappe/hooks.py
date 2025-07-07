@@ -215,6 +215,7 @@ doc_events = {
 	"Company": {
         "on_update": "frappe.server_overrides.company.on_update",
 		"before_validate": "frappe.server_overrides.company.before_validate",
+		"after_delete": "frappe.server_overrides.company.after_delete",
     },
 	"Sales Invoice": {
 		"on_submit": "frappe.server_overrides.sales_invoice.on_submit",
