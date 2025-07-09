@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 from frappe.api.third_party_api import MSDIRECTAPI
 import frappe
 import json, base64
@@ -270,14 +271,18 @@ def get_invoice(invoice):
     customer = frappe.get_doc("Customer", invoice.customer)
     customer_buyer_type = customer.custom_buyer_type
     company = frappe.get_doc("Company", invoice.company)
-    issue_time = datetime.now().strftime("%H:%M:%S")
+    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+    malaysia_time = utc_now.astimezone(pytz.timezone("Asia/Kuala_Lumpur"))
+    
+    issue_time =  malaysia_time.strftime('%H:%M:%S')
     timezone = "+0800"
 
     routingEidentifier = []
     if customer_buyer_type == "B2C" and customer.custom_mykadmytenterapassport_nomyprmykas_no:
         routingEidentifier.append({"scheme": "MY:NRIC", "id": customer.custom_mykadmytenterapassport_nomyprmykas_no})
     elif customer_buyer_type != "B2C" and customer.custom_business_registration_number:
-        routingEidentifier.append({"scheme": "MY:EIF", "id": customer.custom_business_registration_number})
+        business_type_code = extract_business_type_code(customer.custom_business_type)
+        routingEidentifier.append({"scheme": "MY:EIF", "id": f"{business_type_code}{customer.custom_business_registration_number}"})
 
     accountingCustomerPartyPublicIdentifiers = []
     if customer_buyer_type == "B2C" and customer.custom_tin_number:
@@ -286,7 +291,8 @@ def get_invoice(invoice):
         if customer.custom_tin_number:
             accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:TIN", "id": customer.custom_tin_number})
         if customer.custom_business_registration_number:
-            accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:EIF", "id": customer.custom_business_registration_number})
+            business_type_code = extract_business_type_code(customer.custom_business_type)
+            accountingCustomerPartyPublicIdentifiers.append({"scheme": "MY:EIF", "id": f"{business_type_code}{customer.custom_business_registration_number}"})
 
     data = {
         "legalEntityId": int(company.custom_legal_entity_id),
