@@ -8,6 +8,7 @@ import json
 from frappe.utils import get_date_str
 import requests
 import re
+from frappe.utils import get_datetime
 
 
 def get_document_evidence(document_submission_id):
@@ -95,7 +96,7 @@ def webhook_response():
             "Sales Invoice",
             sales_invoice,
             {
-                "custom_lhdn_comments": "The e-invoice is still awaiting validation from LHDN",
+                "custom_lhdn_comments": "The e-invoice is cleared from LHDN. It is being processed by peppol.",
                 "custom_api_status": "Cleared",
             },
         )
@@ -198,6 +199,15 @@ ISO_3166_MY_CODES = {
 def get_iso_county(state):
     return ISO_3166_MY_CODES.get(state, "MY-14")  # Default to Kuala Lumpur if not found
 
+def get_malaysia_datetime():
+    tz_kuala_lumpur = pytz.timezone("Asia/Kuala_Lumpur")
+    return datetime.now(tz_kuala_lumpur)
+
+def to_malaysia_date_str(dt):
+    dt = get_datetime(dt)  # convert string or date to datetime
+    malaysia = pytz.timezone("Asia/Kuala_Lumpur")
+    malaysia_dt = dt.astimezone(malaysia)
+    return malaysia_dt.strftime('%Y-%m-%d')
 
 def get_invoice(invoice):
     tax_subtotals = []
@@ -271,10 +281,10 @@ def get_invoice(invoice):
     customer = frappe.get_doc("Customer", invoice.customer)
     customer_buyer_type = customer.custom_buyer_type
     company = frappe.get_doc("Company", invoice.company)
-    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
-    malaysia_time = utc_now.astimezone(pytz.timezone("Asia/Kuala_Lumpur"))
-    
-    issue_time =  malaysia_time.strftime('%H:%M:%S')
+    malaysia_time = get_malaysia_datetime()
+
+    issue_date = malaysia_time.strftime('%Y-%m-%d')  # Use this for issueDate
+    issue_time = malaysia_time.strftime('%H:%M:%S')  # Use this for issueTime
     timezone = "+0800"
 
     routingEidentifier = []
@@ -311,10 +321,10 @@ def get_invoice(invoice):
                 "taxSystem": "tax_line_percentages",
                 "documentCurrency": invoice.currency,
                 "invoiceNumber": invoice.name,
-                "issueDate": get_date_str(invoice.posting_date),
+                "issueDate": issue_date,
                 "issueTime": issue_time,
                 "timeZone": timezone,
-                "dueDate": get_date_str(invoice.custom_payment_due_date),
+                "dueDate": to_malaysia_date_str(invoice.custom_payment_due_date),
                 "accountingSupplierParty": {
                     "companyName": company.company_name,
                     "party": {
