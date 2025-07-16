@@ -106,6 +106,10 @@ def on_update(doc, method=None):
         "Payment Entry","naming_series",f"OR-{doc.abbr}-.YYYY.-.MM.-.####")
         frappe.make_property_setter(payment_entry_naming_series_property_setter, validate_fields_for_doctype=False)
 
+        journal_entry_naming_series_property_setter = get_options_property_setter(
+        "Journal Entry","naming_series",f"EXP-{doc.abbr}-.YYYY.-.MM.-.####")
+        frappe.make_property_setter(journal_entry_naming_series_property_setter, validate_fields_for_doctype=False)
+
     if not doc.custom_enable_einvoicing:
         # doc.db_set("custom_business_registration_no", old_doc.custom_business_registration_no)
         # doc.db_set("custom_business_tin_no", old_doc.custom_business_tin_no)
