@@ -13,7 +13,7 @@ from frappe.utils import get_datetime
 
 def get_document_evidence(document_submission_id):
     url = f"https://api.storecove.com/api/v2/document_submissions/{document_submission_id}/evidence/clearing"
-    bearer_token = "uM7Hg353lnC_ggQrcM5YGXdvIbP9xBMv2FLxNgMCLk0"
+    bearer_token = frappe.conf.store_cove_token
     headers = {"Accept": "application/json", "Authorization": f"Bearer {bearer_token}"}
 
     try:
@@ -140,7 +140,7 @@ def run_success_flow(sales_invoice, payload):
     if result:
         document_id, long_id = result
         validation_url = (
-            f"https://preprod.myinvois.hasil.gov.my/{document_id}/share/{long_id}"
+            f"https://{frappe.conf.store_cove_validation_url}/{document_id}/share/{long_id}"
         )
         frappe.db.set_value(
             "Sales Invoice", sales_invoice, "custom_invoice_url", validation_url
