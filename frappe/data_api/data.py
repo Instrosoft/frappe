@@ -51,7 +51,7 @@ def send_invoice(invoice):
     except Exception as e:
         frappe.log(response)
         frappe.log(e)
-        pass
+        return
     response_api = frappe.parse_json(response)
     # frappe.throw(response_api.errors[0].source)
     if response_api.get("errors"):
@@ -393,11 +393,16 @@ def bulk_send_invoice(invoice_names):
 
 
 def get_base64(invoice_name):
-    pdf_doc = frappe.get_print(
-        "Sales Invoice", invoice_name, "Print Sales invoice Format V2", as_pdf=True
-    )
-    base64_value = base64.b64encode(pdf_doc).decode("utf-8")
-    return base64_value
+    try:
+        pdf_doc = frappe.get_print(
+            "Sales Invoice", invoice_name, "Sales Invoice Print Format", as_pdf=True
+        )
+        if not pdf_doc:
+            frappe.throw("PDF generation failed.")
+        return base64.b64encode(pdf_doc).decode("utf-8")
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_base64 Failed")
+        raise
 
 
 @frappe.whitelist()
