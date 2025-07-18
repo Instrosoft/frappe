@@ -10,7 +10,7 @@ from frappe import _
 BASE_URL = "https://api.storecove.com/api/v2"
 
 # TODO: Replace with actual token
-TOKEN = "uM7Hg353lnC_ggQrcM5YGXdvIbP9xBMv2FLxNgMCLk0"
+TOKEN = frappe.conf.store_cove_token
 
 ALLOWED_METHODS = frozenset(("POST", "GET", "PATCH", "PUT", "DELETE"))
 SENSITIVE_INFO = frozenset(("Authorization",))
