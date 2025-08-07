@@ -362,82 +362,82 @@ frappe.ui.form.Toolbar = class Toolbar {
 			}
 		}
 
-		// email
-		if (frappe.model.can_email(null, me.frm) && me.frm.doc.docstatus < 2) {
-			this.page.add_menu_item(
-				__("Email"),
-				function () {
-					me.frm.email_doc();
-				},
-				true,
-				{
-					shortcut: "Ctrl+E",
-					condition: () => !this.frm.is_new(),
-				}
-			);
-		}
+		// // email
+		// if (frappe.model.can_email(null, me.frm) && me.frm.doc.docstatus < 2) {
+		// 	this.page.add_menu_item(
+		// 		__("Email"),
+		// 		function () {
+		// 			me.frm.email_doc();
+		// 		},
+		// 		true,
+		// 		{
+		// 			shortcut: "Ctrl+E",
+		// 			condition: () => !this.frm.is_new(),
+		// 		}
+		// 	);
+		// }
 
-		// go to field modal
-		this.page.add_menu_item(
-			__("Jump to field"),
-			function () {
-				me.show_jump_to_field_dialog();
-			},
-			true,
-			"Ctrl+J"
-		);
+		// // go to field modal
+		// this.page.add_menu_item(
+		// 	__("Jump to field"),
+		// 	function () {
+		// 		me.show_jump_to_field_dialog();
+		// 	},
+		// 	true,
+		// 	"Ctrl+J"
+		// );
 
-		// Linked With
-		if (!me.frm.meta.issingle) {
-			this.page.add_menu_item(
-				__("Links"),
-				function () {
-					me.show_linked_with();
-				},
-				true
-			);
-		}
+		// // Linked With
+		// if (!me.frm.meta.issingle) {
+		// 	this.page.add_menu_item(
+		// 		__("Links"),
+		// 		function () {
+		// 			me.show_linked_with();
+		// 		},
+		// 		true
+		// 	);
+		// }
 
-		// duplicate
-		if (frappe.boot.user.can_create.includes(me.frm.doctype) && !me.frm.meta.allow_copy) {
-			this.page.add_menu_item(
-				__("Duplicate"),
-				function () {
-					me.frm.copy_doc();
-				},
-				true,
-				"Shift+D"
-			);
-		}
+		// // duplicate
+		// if (frappe.boot.user.can_create.includes(me.frm.doctype) && !me.frm.meta.allow_copy) {
+		// 	this.page.add_menu_item(
+		// 		__("Duplicate"),
+		// 		function () {
+		// 			me.frm.copy_doc();
+		// 		},
+		// 		true,
+		// 		"Shift+D"
+		// 	);
+		// }
 
-		// copy doc to clipboard
-		this.page.add_menu_item(
-			__("Copy to Clipboard"),
-			function () {
-				frappe.utils.copy_to_clipboard(JSON.stringify(me.frm.doc));
-			},
-			true
-		);
+		// // copy doc to clipboard
+		// this.page.add_menu_item(
+		// 	__("Copy to Clipboard"),
+		// 	function () {
+		// 		frappe.utils.copy_to_clipboard(JSON.stringify(me.frm.doc));
+		// 	},
+		// 	true
+		// );
 
-		// rename
-		if (this.can_rename()) {
-			this.page.add_menu_item(
-				__("Rename"),
-				function () {
-					me.frm.rename_doc();
-				},
-				true
-			);
-		}
+		// // rename
+		// if (this.can_rename()) {
+		// 	this.page.add_menu_item(
+		// 		__("Rename"),
+		// 		function () {
+		// 			me.frm.rename_doc();
+		// 		},
+		// 		true
+		// 	);
+		// }
 
-		// reload
-		this.page.add_menu_item(
-			__("Reload"),
-			function () {
-				me.frm.reload_doc();
-			},
-			true
-		);
+		// // reload
+		// this.page.add_menu_item(
+		// 	__("Reload"),
+		// 	function () {
+		// 		me.frm.reload_doc();
+		// 	},
+		// 	true
+		// );
 
 		// delete
 		if (
@@ -459,44 +459,44 @@ frappe.ui.form.Toolbar = class Toolbar {
 			);
 		}
 
-		this.page.add_menu_item(
-			__("Remind Me"),
-			() => {
-				let reminder_maanger = new ReminderManager({ frm: this.frm });
-				reminder_maanger.show();
-			},
-			true,
-			{
-				shortcut: "Shift+R",
-				condition: () => !this.frm.is_new(),
-			}
-		);
+		// this.page.add_menu_item(
+		// 	__("Remind Me"),
+		// 	() => {
+		// 		let reminder_maanger = new ReminderManager({ frm: this.frm });
+		// 		reminder_maanger.show();
+		// 	},
+		// 	true,
+		// 	{
+		// 		shortcut: "Shift+R",
+		// 		condition: () => !this.frm.is_new(),
+		// 	}
+		// );
 		//
 		// Undo and redo
-		this.page.add_menu_item(
-			__("Undo"),
-			() => {
-				this.frm.undo_manager.undo();
-			},
-			true,
-			{
-				shortcut: "Ctrl+Z",
-				condition: () => !this.frm.is_form_builder(),
-				description: __("Undo last action"),
-			}
-		);
-		this.page.add_menu_item(
-			__("Redo"),
-			() => {
-				this.frm.undo_manager.redo();
-			},
-			true,
-			{
-				shortcut: "Ctrl+Y",
-				condition: () => !this.frm.is_form_builder(),
-				description: __("Redo last action"),
-			}
-		);
+		// this.page.add_menu_item(
+		// 	__("Undo"),
+		// 	() => {
+		// 		this.frm.undo_manager.undo();
+		// 	},
+		// 	true,
+		// 	{
+		// 		shortcut: "Ctrl+Z",
+		// 		condition: () => !this.frm.is_form_builder(),
+		// 		description: __("Undo last action"),
+		// 	}
+		// );
+		// this.page.add_menu_item(
+		// 	__("Redo"),
+		// 	() => {
+		// 		this.frm.undo_manager.redo();
+		// 	},
+		// 	true,
+		// 	{
+		// 		shortcut: "Ctrl+Y",
+		// 		condition: () => !this.frm.is_form_builder(),
+		// 		description: __("Redo last action"),
+		// 	}
+		// );
 
 		this.make_customize_buttons();
 

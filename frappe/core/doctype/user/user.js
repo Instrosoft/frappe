@@ -134,25 +134,25 @@ frappe.ui.form.on("User", {
 
 		if (!frm.is_new()) {
 			if (has_access_to_edit_user()) {
-				frm.add_custom_button(
-					__("Set User Permissions"),
-					function () {
-						frappe.route_options = {
-							user: doc.name,
-						};
-						frappe.set_route("List", "User Permission");
-					},
-					__("Permissions")
-				);
+				// frm.add_custom_button(
+				// 	__("Set User Permissions"),
+				// 	function () {
+				// 		frappe.route_options = {
+				// 			user: doc.name,
+				// 		};
+				// 		frappe.set_route("List", "User Permission");
+				// 	},
+				// 	__("Permissions")
+				// );
 
-				frm.add_custom_button(
-					__("View Permitted Documents"),
-					() =>
-						frappe.set_route("query-report", "Permitted Documents For User", {
-							user: frm.doc.name,
-						}),
-					__("Permissions")
-				);
+				// frm.add_custom_button(
+				// 	__("View Permitted Documents"),
+				// 	() =>
+				// 		frappe.set_route("query-report", "Permitted Documents For User", {
+				// 			user: frm.doc.name,
+				// 		}),
+				// 	__("Permissions")
+				// );
 
 				frm.toggle_display(["sb1", "sb3", "modules_access"], true);
 			}
@@ -256,19 +256,19 @@ frappe.ui.form.on("User", {
 				}
 			}
 		}
-		if (frm.doc.user_emails && frappe.model.can_create("Email Account")) {
-			var found = 0;
-			for (var i = 0; i < frm.doc.user_emails.length; i++) {
-				if (frm.doc.email == frm.doc.user_emails[i].email_id) {
-					found = 1;
-				}
-			}
-			if (!found) {
-				frm.add_custom_button(__("Create User Email"), function () {
-					frm.events.create_user_email(frm);
-				});
-			}
-		}
+		// if (frm.doc.user_emails && frappe.model.can_create("Email Account")) {
+		// 	var found = 0;
+		// 	for (var i = 0; i < frm.doc.user_emails.length; i++) {
+		// 		if (frm.doc.email == frm.doc.user_emails[i].email_id) {
+		// 			found = 1;
+		// 		}
+		// 	}
+		// 	if (!found) {
+		// 		frm.add_custom_button(__("Create User Email"), function () {
+		// 			frm.events.create_user_email(frm);
+		// 		});
+		// 	}
+		// }
 
 		if (frappe.route_flags.unsaved === 1) {
 			delete frappe.route_flags.unsaved;

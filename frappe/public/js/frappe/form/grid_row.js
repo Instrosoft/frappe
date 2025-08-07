@@ -331,6 +331,7 @@ export default class GridRow {
 	}
 
 	add_open_form_button() {
+		return
 		var me = this;
 		if (this.doc && !this.grid.df.in_place_edit) {
 			// remove row
@@ -341,9 +342,10 @@ export default class GridRow {
 					const edit_msg = __("Edit", "", "Edit grid row");
 					this.open_form_button = $(`
 						<div class="btn-open-row" data-toggle="tooltip" data-placement="right" title="${edit_msg}">
-							<a>${frappe.utils.icon("edit", "xs")}</a>
+							<a>${frappe.utils.icon("edit", "xs")}</a> 
 						</div>
 					`)
+					//remove 340 if needed for edit
 						.appendTo(this.open_form_button)
 						.on("click", function () {
 							me.toggle_view();
@@ -362,17 +364,20 @@ export default class GridRow {
 	}
 
 	add_column_configure_button() {
+		return
 		if (this.grid.df.in_place_edit && !this.frm) return;
 
 		if (this.configure_columns && this.frm) {
 			this.configure_columns_button = $(`
 				<div class="col grid-static-col d-flex justify-content-center" style="cursor: pointer;">
-					<a>${frappe.utils.icon("setting-gear", "sm", "", "filter: opacity(0.5)")}</a>
+				
 				</div>
 			`)
+				// <a>${frappe.utils.icon("setting-gear", "sm", "", "filter: opacity(0.5)")}</a>
 				.appendTo(this.row)
 				.on("click", () => {
-					this.configure_dialog_for_columns_selector();
+					return
+					//this.configure_dialog_for_columns_selector();
 				});
 		} else if (this.configure_columns && !this.frm) {
 			this.configure_columns_button = $(`

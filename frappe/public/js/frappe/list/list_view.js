@@ -1990,10 +1990,13 @@ frappe.views.ListView = class ListView extends frappe.views.BaseList {
 				action: () => {
 					const docnames = this.get_checked_items(true);
 					if (docnames.length > 0) {
+						let message=__("Cancel {0} documents?", [docnames.length]);
+						if(this.doctype === "Sales Invoice"){
+							message = "⚠️ Warning!<br>Are you sure you want to cancel these documents?<br>Canceling these documents is permanent and cannot be undone."
+						}
 						frappe.confirm(
 							__(
-								"Cancel {0} documents?",
-								[docnames.length],
+								message,								
 								"Title of confirmation dialog"
 							),
 							() => {
@@ -2003,7 +2006,10 @@ frappe.views.ListView = class ListView extends frappe.views.BaseList {
 									this.clear_checked_items();
 									this.refresh();
 								});
-							}
+							},
+							()=>{},
+							"Confirm",
+							"Cancel"
 						);
 					}
 				},

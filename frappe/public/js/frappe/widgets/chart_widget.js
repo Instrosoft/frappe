@@ -461,28 +461,28 @@ export default class ChartWidget extends Widget {
 
 	set_chart_actions(actions) {
 		this.chart_actions = $(`<div class="chart-actions dropdown pull-right">
-			<button data-toggle="dropdown"
-				aria-haspopup="true"aria-expanded="false"
-				class="btn btn-xs btn-secondary chart-menu"
-			>
-				<svg class="icon icon-sm">
-					<use href="#icon-dot-horizontal">
-					</use>
-				</svg>
-			</button>
-			<ul class="dropdown-menu dropdown-menu-right">
-				${actions
-					.map(
-						(action) =>
-							`<li><a class="dropdown-item" data-action="${action.action}">${__(
-								action.label
-							)}</a></li>`
-					)
-					.join("")}
-			</ul>
 		</div>
 		`);
 		/* eslint-enable indent */
+
+
+	// 	<button data-toggle="dropdown"
+	// 	aria-haspopup="true"aria-expanded="false"
+	// 	class="btn btn-xs btn-secondary chart-menu"
+	// >
+	// 	<svg class="icon icon-sm">
+	// 		<use href="#icon-dot-horizontal">
+	// 		</use>
+	// 	</svg>
+	// </button>
+	// <ul class="dropdown-menu dropdown-menu-right">
+	// 	${actions
+	// 		.map(
+	// 			(action) =>
+	// 				`<li><a class="dropdown-item" data-action="${action.action}">${action.label}</a></li>`
+	// 		)
+	// 		.join("")}
+	// </ul>
 
 		this.chart_actions.find("a[data-action]").each((i, o) => {
 			const action = o.dataset.action;

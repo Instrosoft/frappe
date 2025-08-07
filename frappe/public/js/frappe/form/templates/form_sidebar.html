@@ -17,6 +17,7 @@
 		</div>
 		{% endif %}
 	</li>
+	<div><p><br>Use image resolution 1080×720 for optimal display.</p></div>
 </ul>
 {% if frm.meta.beta %}
 <div class="sidebar-menu">
@@ -40,7 +41,7 @@
 	<li><a class="help-link list-link" data-doctype="{{ doctype }}">{{ __("Help") }}</a></li>
 	{% } %}
 </ul>
-<ul class="list-unstyled sidebar-menu form-assignments">
+<!-- <ul class="list-unstyled sidebar-menu form-assignments">
 	<li>
 		<span class="form-sidebar-items">
 			<span class="add-assignment-label">
@@ -53,8 +54,8 @@
 		</span>
 		<div class="assignments"></div>
 	</li>
-</ul>
-<ul class="list-unstyled sidebar-menu form-attachments">
+</ul> -->
+<!-- <ul class="list-unstyled sidebar-menu form-attachments">
 	<li class="attachments-actions">
 		<span class="form-sidebar-items">
 			<span>
@@ -78,8 +79,8 @@
 			{%= __("Show All") %}
 		</span>
 	</a>
-</ul>
-<ul class="list-unstyled sidebar-menu form-reviews">
+</ul> -->
+<!-- <ul class="list-unstyled sidebar-menu form-reviews">
 		<li class="reviews">
 			<span class="form-sidebar-items">
 				<span>
@@ -91,8 +92,8 @@
 				</button>
 			</span>
 		</li>
-</ul>
-<ul class="list-unstyled sidebar-menu form-tags">
+</ul> -->
+<!-- <ul class="list-unstyled sidebar-menu form-tags">
 		<li>
 			<span class="form-sidebar-items">
 				<span>
@@ -101,8 +102,8 @@
 				</span>
 			</span>
 		</li>
-</ul>
-<ul class="list-unstyled sidebar-menu form-shared">
+</ul> -->
+<!-- <ul class="list-unstyled sidebar-menu form-shared">
 	<li>
 		<span class="form-sidebar-items">
 			<span class="share-label">
@@ -115,8 +116,8 @@
 		</span>
 		<div class="shares"></div>
 	</li>
-</ul>
-<ul class="list-unstyled sidebar-menu followed-by-section">
+</ul> -->
+<!-- <ul class="list-unstyled sidebar-menu followed-by-section">
 	<li class="sidebar-label followed-by-label hidden">
 		<svg class="icon icon-sm">
 			<use href="#icon-link-url" class="like-icon"></use>
@@ -132,11 +133,11 @@
 			{%= __("Unfollow") %}
 		</a>
 	</li>
-</ul>
+</ul> -->
 <ul class="list-unstyled sidebar-menu">
 	<a><li class="auto-repeat-status"><li></a>
 </ul>
-<ul class="list-unstyled sidebar-menu form-sidebar-stats">
+<!-- <ul class="list-unstyled sidebar-menu form-sidebar-stats">
 	<li class="flex">
 		<div class="form-stats d-flex">
 			<span class="form-stats-likes">
@@ -159,13 +160,13 @@
 			Follow
 		</a>
 	</li>
-</ul>
+</ul> -->
 <hr>
-<ul class="list-unstyled sidebar-menu text-muted">
+<!-- <ul class="list-unstyled sidebar-menu text-muted">
 	<li class="pageview-count"></li>
 	<li class="modified-by"></li>
 	<li class="created-by"></li>
-</ul>
+</ul> -->
 {% if(frappe.get_form_sidebar_extension) { %}
 	{{ frappe.get_form_sidebar_extension() }}
 {% } %}

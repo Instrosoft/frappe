@@ -1526,103 +1526,103 @@ frappe.views.ReportView = class ReportView extends frappe.views.ListView {
 
 	report_menu_items() {
 		let items = [
-			{
-				label: __("Show Totals"),
-				action: () => {
-					this.add_totals_row = !this.add_totals_row;
-					this.save_view_user_settings({
-						add_totals_row: this.add_totals_row,
-					});
-					this.datatable.refresh(this.get_data(this.data));
-				},
-			},
-			{
-				label: __("Print"),
-				action: () => {
-					// prepare rows in their current state, sorted and filtered
-					const rows_in_order = this.datatable.datamanager.rowViewOrder
-						.map((index) => {
-							if (this.datatable.bodyRenderer.visibleRowIndices.includes(index)) {
-								return this.data[index];
-							}
-						})
-						.filter(Boolean);
+			// {
+			// 	label: __("Show Totals"),
+			// 	action: () => {
+			// 		this.add_totals_row = !this.add_totals_row;
+			// 		this.save_view_user_settings({
+			// 			add_totals_row: this.add_totals_row,
+			// 		});
+			// 		this.datatable.refresh(this.get_data(this.data));
+			// 	},
+			// },
+			// {
+			// 	label: __("Print"),
+			// 	action: () => {
+			// 		// prepare rows in their current state, sorted and filtered
+			// 		const rows_in_order = this.datatable.datamanager.rowViewOrder
+			// 			.map((index) => {
+			// 				if (this.datatable.bodyRenderer.visibleRowIndices.includes(index)) {
+			// 					return this.data[index];
+			// 				}
+			// 			})
+			// 			.filter(Boolean);
 
-					if (this.add_totals_row) {
-						const total_data = this.get_columns_totals(this.data);
+			// 		if (this.add_totals_row) {
+			// 			const total_data = this.get_columns_totals(this.data);
 
-						total_data["name"] = __("Total");
-						total_data.is_total_row = true;
-						rows_in_order.push(total_data);
-					}
+			// 			total_data["name"] = __("Total");
+			// 			total_data.is_total_row = true;
+			// 			rows_in_order.push(total_data);
+			// 		}
 
-					frappe.ui.get_print_settings(false, (print_settings) => {
-						var title = this.report_name || __(this.doctype);
-						frappe.render_grid({
-							title: title,
-							subtitle: this.get_filters_html_for_print(),
-							print_settings: print_settings,
-							columns: this.columns,
-							data: rows_in_order,
-							can_use_smaller_font: 1,
-						});
-					});
-				},
-			},
-			{
-				label: __("Toggle Chart"),
-				action: () => this.toggle_charts(),
-			},
-			{
-				label: __("Toggle Sidebar"),
-				action: () => this.toggle_side_bar(),
-				shortcut: "Ctrl+K",
-			},
-			{
-				label: __("Pick Columns"),
-				action: () => {
-					const d = new frappe.ui.Dialog({
-						title: __("Pick Columns"),
-						fields: this.get_dialog_fields(),
-						primary_action: (values) => {
-							// doctype fields
-							let fields = values[this.doctype].map((f) => [f, this.doctype]);
-							delete values[this.doctype];
+			// 		frappe.ui.get_print_settings(false, (print_settings) => {
+			// 			var title = this.report_name || __(this.doctype);
+			// 			frappe.render_grid({
+			// 				title: title,
+			// 				subtitle: this.get_filters_html_for_print(),
+			// 				print_settings: print_settings,
+			// 				columns: this.columns,
+			// 				data: rows_in_order,
+			// 				can_use_smaller_font: 1,
+			// 			});
+			// 		});
+			// 	},
+			// },
+			// {
+			// 	label: __("Toggle Chart"),
+			// 	action: () => this.toggle_charts(),
+			// },
+			// {
+			// 	label: __("Toggle Sidebar"),
+			// 	action: () => this.toggle_side_bar(),
+			// 	shortcut: "Ctrl+K",
+			// },
+			// {
+			// 	label: __("Pick Columns"),
+			// 	action: () => {
+			// 		const d = new frappe.ui.Dialog({
+			// 			title: __("Pick Columns"),
+			// 			fields: this.get_dialog_fields(),
+			// 			primary_action: (values) => {
+			// 				// doctype fields
+			// 				let fields = values[this.doctype].map((f) => [f, this.doctype]);
+			// 				delete values[this.doctype];
 
-							// child table fields
-							for (let cdt in values) {
-								fields = fields.concat(values[cdt].map((f) => [f, cdt]));
-							}
+			// 				// child table fields
+			// 				for (let cdt in values) {
+			// 					fields = fields.concat(values[cdt].map((f) => [f, cdt]));
+			// 				}
 
-							// always keep name (ID) column
-							this.fields = [["name", this.doctype], ...fields];
+			// 				// always keep name (ID) column
+			// 				this.fields = [["name", this.doctype], ...fields];
 
-							this.fields.map((f) => this.add_currency_column(f[0], f[1]));
+			// 				this.fields.map((f) => this.add_currency_column(f[0], f[1]));
 
-							this.reorder_fields();
-							this.build_fields();
-							this.setup_columns();
+			// 				this.reorder_fields();
+			// 				this.build_fields();
+			// 				this.setup_columns();
 
-							this.datatable.destroy();
-							this.datatable = null;
-							this.refresh();
+			// 				this.datatable.destroy();
+			// 				this.datatable = null;
+			// 				this.refresh();
 
-							d.hide();
-						},
-					});
+			// 				d.hide();
+			// 			},
+			// 		});
 
-					d.$body.prepend(`
-						<div class="columns-search">
-							<input type="text" placeholder="${__(
-								"Search"
-							)}" data-element="search" class="form-control input-xs">
-						</div>
-					`);
+			// 		d.$body.prepend(`
+			// 			<div class="columns-search">
+			// 				<input type="text" placeholder="${__(
+			// 					"Search"
+			// 				)}" data-element="search" class="form-control input-xs">
+			// 			</div>
+			// 		`);
 
-					frappe.utils.setup_search(d.$body, ".unit-checkbox", ".label-area");
-					d.show();
-				},
-			},
+			// 		frappe.utils.setup_search(d.$body, ".unit-checkbox", ".label-area");
+			// 		d.show();
+			// 	},
+			// },
 		];
 
 		if (frappe.model.can_export(this.doctype)) {
@@ -1702,16 +1702,16 @@ frappe.views.ReportView = class ReportView extends frappe.views.ListView {
 			});
 		}
 
-		items.push({
-			label: __("Setup Auto Email"),
-			action: () => {
-				if (this.report_name) {
-					frappe.set_route("List", "Auto Email Report", { report: this.report_name });
-				} else {
-					frappe.msgprint(__("Please save the report first"));
-				}
-			},
-		});
+		// items.push({
+		// 	label: __("Setup Auto Email"),
+		// 	action: () => {
+		// 		if (this.report_name) {
+		// 			frappe.set_route("List", "Auto Email Report", { report: this.report_name });
+		// 		} else {
+		// 			frappe.msgprint(__("Please save the report first"));
+		// 		}
+		// 	},
+		// });
 
 		const can_edit_or_delete = (action) => {
 			const method = action == "delete" ? "can_delete" : "can_write";
@@ -1731,10 +1731,10 @@ frappe.views.ReportView = class ReportView extends frappe.views.ListView {
 		}
 
 		// anyone can save as
-		items.push({
-			label: __("Save As"),
-			action: () => this.save_report("save_as"),
-		});
+		// items.push({
+		// 	label: __("Save As"),
+		// 	action: () => this.save_report("save_as"),
+		// });
 
 		// A user with role Report Manager or Report Owner can delete
 		if (can_edit_or_delete("delete")) {

@@ -851,6 +851,7 @@ class FilterArea {
 		fields.map((df) => {
 			this.list_view.page.add_field(df, this.standard_filters_wrapper);
 		});
+		console.log("Standard filters", fields);
 	}
 
 	get_standard_filters() {

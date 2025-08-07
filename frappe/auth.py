@@ -144,15 +144,15 @@ class LoginManager:
 		frappe.form_dict.pop("pwd", None)
 		self.post_login()
 
-	def post_login(self, session_end: str | None = None, audit_user: str | None = None):
-		self.run_trigger("on_login")
+	def post_login(self):
+		#self.run_trigger("on_login")
 		validate_ip_address(self.user)
 		self.validate_hour()
 		self.get_user_info()
 		self.make_session(session_end=session_end, audit_user=audit_user)
 		self.setup_boot_cache()
 		self.set_user_info()
-
+		self.run_trigger("on_login")
 	def get_user_info(self):
 		self.info = frappe.get_cached_value(
 			"User",

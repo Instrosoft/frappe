@@ -75,6 +75,7 @@ class User(Document):
 		block_modules: DF.Table[BlockModule]
 		bulk_actions: DF.Check
 		bypass_restrict_ip_check_if_2fa_enabled: DF.Check
+		company_name: DF.Link
 		dashboard: DF.Check
 		default_app: DF.Literal[None]
 		default_workspace: DF.Link | None
@@ -643,6 +644,58 @@ class User(Document):
 				self.suggest_username()
 
 			self.username = ""
+
+			#def before_save(self):
+			#	max_quota = frappe.db.get_value("Quota usage", frappe.defaults.get_user_default("Company"), "max_users")
+			#	available_quota = frappe.db.get_value("Quota usage", frappe.defaults.get_user_default("Company"), "av_users")
+				#frappe.msgprint("Heyy: ",type(max_quota) , type(available_quota))
+			#	if max_quota <= available_quota:
+			#		frappe.throw(_(f"You have reached the maximum number of users allowed. <br>Max users: {max_quota}, Current users: {available_quota}"))
+			#	else:
+			#	frappe.db.set_value("Quota usage", frappe.defaults.get_user_default("Company"), "av_users", available_quota + 1)
+	
+	def before_insert(self):
+		try:
+			# Fetching the max and available quota for the current company
+			user = frappe.session.user  # Get the current logged-in user
+			company = frappe.db.get_value("User", user, "company_name") or self.company_name
+			
+			if user == "admin@invoix.biz" or user == "Administrator":
+				return
+				
+			if not company:
+				frappe.throw(_("Unable to fetch the company. Please set a default company for the user."))
+
+			# Count the number of users associated with the same company
+			user_count = frappe.db.count("User", filters={"company_name": company})
+			max_quota = frappe.db.get_value("Quota usage", company, "max_users")
+			available_quota = frappe.db.get_value("Quota usage", company, "av_users")
+			
+			# Ensure the fetched values are not None and are integers
+			if max_quota is None or available_quota is None:
+				frappe.throw(_("Quota values could not be retrieved. Please check the 'Quota usage' setup for your company."))
+
+			# Convert values to integers for comparison
+			max_quota = int(max_quota)
+			available_quota = int(available_quota)
+
+			# Validate quotas
+			if available_quota >= max_quota:
+				frappe.throw(
+					_(f"You have reached the maximum number of users allowed. <br>Max users: {max_quota}, Current users: {available_quota}")
+				)
+			else:
+				# if user_count !=0:
+				# Increment the available quota
+					frappe.db.set_value("Quota usage", company, "av_users", available_quota + 1)
+				# else:
+				# 	return
+
+		except ValueError:
+			frappe.throw(_("Quota values must be numeric. Please check the 'Quota usage' setup."))
+		except Exception as e:
+			frappe.throw(_("Quota Exceeded: {0}".format(str(e))))
+
 
 	def password_strength_test(self):
 		"""test password strength"""

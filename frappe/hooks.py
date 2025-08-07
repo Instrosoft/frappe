@@ -8,6 +8,12 @@ app_publisher = "Frappe Technologies"
 app_description = "Full stack web framework with Python, Javascript, MariaDB, Redis, Node"
 app_license = "MIT"
 app_logo_url = "/assets/frappe/images/frappe-framework-logo.svg"
+
+auth_hooks = [
+    'frappe.custom_login.CustomLoginManager'
+]
+
+
 develop_version = "15.x.x-develop"
 
 app_email = "developers@frappe.io"
@@ -16,6 +22,14 @@ before_install = "frappe.utils.install.before_install"
 after_install = "frappe.utils.install.after_install"
 
 page_js = {"setup-wizard": "public/js/frappe/setup_wizard.js"}
+
+on_login = "frappe.user_hooks.update_splash_and_app_logo"
+
+#on_login = [
+#    "frappe.user_hooks.update_splash_and_app_logo",
+#    "frappe.custom_auth.custom_login_restriction"
+#]
+
 
 # website
 app_include_js = [
@@ -26,7 +40,8 @@ app_include_js = [
 	"controls.bundle.js",
 	"report.bundle.js",
 	"telemetry.bundle.js",
-	"billing.bundle.js",
+	"/assets/frappe/js/invoice_dashboard_title.js",
+	"frappe.bundle.js",
 ]
 
 app_include_css = [
@@ -41,7 +56,9 @@ app_include_icons = [
 doctype_js = {
 	"Web Page": "public/js/frappe/utils/web_template.js",
 	"Website Settings": "public/js/frappe/utils/web_template.js",
+	"Quotation": ["client_overrides/quotation.js"],
 }
+
 
 web_include_js = ["website_script.js"]
 
@@ -192,6 +209,23 @@ doc_events = {
 	"Page": {
 		"on_update": "frappe.cache_manager.build_domain_restriced_page_cache",
 	},
+	"User": {
+      
+     	"after_insert": "frappe.users_hooks.handle_user_creation",
+	},
+	"Company": {
+        "on_update": "frappe.server_overrides.company.on_update",
+		"before_validate": "frappe.server_overrides.company.before_validate",
+		"after_delete": "frappe.server_overrides.company.after_delete",
+    },
+	"Sales Invoice": {
+		"on_submit": "frappe.server_overrides.sales_invoice.on_submit",
+		"on_cancel": "frappe.server_overrides.sales_invoice.on_cancel",
+		"before_insert": "frappe.server_overrides.sales_invoice.before_insert",
+		"before_cancel": "frappe.server_overrides.sales_invoice.before_cancel",
+		"on_update": "frappe.server_overrides.sales_invoice.on_update",
+	},
+
 }
 
 scheduler_events = {
@@ -398,6 +432,8 @@ override_whitelisted_methods = {
 	"frappe.www.login.login_via_salesforce": "frappe.integrations.oauth2_logins.login_via_salesforce",
 	"frappe.www.login.login_via_fairlogin": "frappe.integrations.oauth2_logins.login_via_fairlogin",
 }
+
+
 
 ignore_links_on_delete = [
 	"Communication",

@@ -1,0 +1,55 @@
+[
+    {
+      "title": "Malaysia Tourism Tax (TTX) - RM 10",
+      "is_default": 0,
+      "disabled": 0,
+      "taxes": [
+        {
+          "account": "Malaysia Tourism Tax",
+          "charge_type": "Actual",
+          "tax_amount": 10,
+          "description": "Malaysia Tourism Tax at RM 10"
+        }
+      ]
+    },
+    {
+      "title": "Malaysia SST Sales and Service Tax(SST) - 6%",
+      "is_default": 0,
+      "disabled": 0,
+      "taxes": [
+        {
+          "account": "Malaysia Sales & Service Tax",
+          "charge_type": "On Net Total",
+          "rate": 6,
+          "description": "Malaysia SST Sales Tax at 6%"
+        }
+      ]
+    },
+    {
+      "title": "Malaysia SST Sales and Service Tax(SST) - 8%",
+      "is_default": 0,
+      "disabled": 0,
+      "taxes": [
+        {
+          "account": "Malaysia Sales & Service Tax",
+          "charge_type": "On Net Total",
+          "rate": 8,
+          "description": "Malaysia SST Service Tax at 8%"
+        }
+      ]
+    },
+    {
+      "title": "Malaysia Service Tax(ST) - 10%",
+      "is_default": 0,
+      "disabled": 0,
+      "taxes": [
+        {
+          "account": "Malaysia SST Service Tax",
+          "charge_type": "On Net Total",
+          "rate": 10,
+          "description": "Malaysia SST Service Tax at 10%"
+        }
+      ]
+    }
+  ]
+  

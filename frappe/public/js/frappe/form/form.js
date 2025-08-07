@@ -121,11 +121,11 @@ frappe.ui.form.Form = class FrappeForm {
 			// 	fieldname: 'timeline'
 			// });
 
-			this.footer = new frappe.ui.form.Footer({
-				frm: this,
-				parent: $("<div>").appendTo(this.page.main.parent()),
-			});
-			$("body").attr("data-sidebar", 1);
+			// this.footer = new frappe.ui.form.Footer({
+			// 	frm: this,
+			// 	parent: $("<div>").appendTo(this.page.main.parent()),
+			// });
+			// $("body").attr("data-sidebar", 1);
 		}
 		this.setup_file_drop();
 		this.setup_doctype_actions();
@@ -993,11 +993,17 @@ frappe.ui.form.Form = class FrappeForm {
 		if (skip_confirm) {
 			cancel_doc();
 		} else {
+			let message=__("Permanently Cancel {0}?", [this.docname]);
+			if(this.doctype === "Sales Invoice"){
+				message = "⚠️ Warning!<br>Are you sure you want to cancel this e-invoice?<br>Canceling this e-invoice is permanent and cannot be undone."
+			}
 			frappe.confirm(
-				__("Permanently Cancel {0}?", [this.docname]),
+				message,
 				cancel_doc,
-				me.handle_save_fail(btn, on_error)
-			);
+				me.handle_save_fail(btn, on_error),
+				"Confirm",
+				"Cancel"
+			)
 		}
 	}
 
