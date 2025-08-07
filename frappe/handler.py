@@ -13,6 +13,7 @@ import frappe.utils
 from frappe import _, is_whitelisted, ping
 from frappe.core.doctype.server_script.server_script_utils import get_server_script_map
 from frappe.monitor import add_data_to_monitor
+from frappe.permissions import check_doctype_permission
 from frappe.utils import cint
 from frappe.utils.csvutils import build_csv_response
 from frappe.utils.deprecations import deprecation_warning
@@ -36,6 +37,7 @@ ALLOWED_MIMETYPES = (
 	"text/plain",
 	"video/quicktime",
 	"video/mp4",
+	"text/csv",
 )
 
 
@@ -60,10 +62,7 @@ def handle():
 
 def execute_cmd(cmd, from_async=False):
 	"""execute a request as python module"""
-	for hook in reversed(frappe.get_hooks("override_whitelisted_methods", {}).get(cmd, [])):
-		# override using the last hook
-		cmd = hook
-		break
+	cmd = frappe.override_whitelisted_method(cmd)
 
 	# via server script
 	server_script = get_server_script_map().get("_api", {}).get(cmd)
@@ -219,13 +218,14 @@ def upload_file():
 				args["max_height"] = int(frappe.form_dict.max_height)
 			content = optimize_image(**args)
 
+	frappe.local.uploaded_file_url = file_url
 	frappe.local.uploaded_file = content
 	frappe.local.uploaded_filename = filename
 
 	if content is not None and (frappe.session.user == "Guest" or (user and not user.has_desk_access())):
 		filetype = guess_type(filename)[0]
 		if filetype not in ALLOWED_MIMETYPES:
-			frappe.throw(_("You can only upload JPG, PNG, PDF, TXT or Microsoft documents."))
+			frappe.throw(_("You can only upload JPG, PNG, PDF, TXT, CSV or Microsoft documents."))
 
 	if method:
 		method = frappe.get_attr(method)
@@ -248,18 +248,22 @@ def upload_file():
 
 
 def check_write_permission(doctype: str | None = None, name: str | None = None):
-	check_doctype = doctype and not name
-	if doctype and name:
-		try:
-			doc = frappe.get_doc(doctype, name)
-			doc.check_permission("write")
-		except frappe.DoesNotExistError:
-			# doc has not been inserted yet, name is set to "new-some-doctype"
-			# If doc inserts fine then only this attachment will be linked see file/utils.py:relink_mismatched_files
-			return
+	if not doctype:
+		return
 
-	if check_doctype:
+	if not name:
 		frappe.has_permission(doctype, "write", throw=True)
+		return
+
+	try:
+		doc = frappe.get_doc(doctype, name)
+	except frappe.DoesNotExistError:
+		# doc has not been inserted yet, name is set to "new-some-doctype"
+		# If doc inserts fine then only this attachment will be linked see file/utils.py:relink_mismatched_files
+		frappe.new_doc(doctype).check_permission("write")
+		return
+
+	doc.check_permission("write")
 
 
 @frappe.whitelist(allow_guest=True)

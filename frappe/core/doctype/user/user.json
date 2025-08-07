@@ -582,7 +582,8 @@
    "hidden": 1,
    "label": "Last Active",
    "no_copy": 1,
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "description": "Stores the JSON of last known versions of various installed apps. It is used to show release notes.",
@@ -619,11 +620,13 @@
    "fieldname": "api_key",
    "fieldtype": "Data",
    "label": "API Key",
+   "no_copy": 1,
    "permlevel": 1,
    "read_only": 1,
    "unique": 1
   },
   {
+   "description": "<a href=\"https://docs.frappe.io/framework/user/en/api/rest#1-token-based-authentication\" target=\"_blank\">\n  Click here to learn about token-based authentication\n</a>",
    "fieldname": "generate_keys",
    "fieldtype": "Button",
    "label": "Generate Keys",
@@ -862,7 +865,8 @@
  "idx": 413,
  "image_field": "user_image",
  "links": [],
- "modified": "2025-05-08 01:24:47.383787",
+ "make_attachments_public": 1,
+ "modified": "2025-05-21 14:57:24.333141",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "User",
@@ -894,6 +898,7 @@
  ],
  "quick_entry": 1,
  "route": "user",
+ "row_format": "Dynamic",
  "search_fields": "full_name",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

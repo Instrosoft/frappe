@@ -128,6 +128,9 @@ def validate_phone_number(phone_number, throw=False):
 	if not phone_number:
 		return False
 
+	if not isinstance(phone_number, str):
+		phone_number = str(phone_number)
+
 	phone_number = phone_number.strip()
 	match = PHONE_NUMBER_PATTERN.match(phone_number)
 
@@ -230,7 +233,7 @@ def validate_url(
 	        bool: if `txt` represents a valid URL
 	"""
 	url = urlparse(txt)
-	is_valid = bool(url.netloc) or (txt and txt.startswith("/"))
+	is_valid = bool(url.scheme and (url.netloc or url.path)) or bool(txt and txt.startswith("/"))
 
 	# Handle scheme validation
 	if isinstance(valid_schemes, str):
@@ -809,7 +812,7 @@ def get_site_info():
 		"country": system_settings.country,
 		"language": system_settings.language or "english",
 		"time_zone": system_settings.time_zone,
-		"setup_complete": cint(system_settings.setup_complete),
+		"setup_complete": frappe.is_setup_complete(),
 		"scheduler_enabled": system_settings.enable_scheduler,
 		# usage
 		"emails_sent": get_emails_sent_this_month(),

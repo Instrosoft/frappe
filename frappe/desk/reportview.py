@@ -19,6 +19,8 @@ from frappe.model.utils import is_virtual_doctype
 from frappe.utils import add_user_info, cint, format_duration
 from frappe.utils.data import sbool
 
+DISALLOWED_PARAMS = ("cmd", "data", "ignore_permissions", "view", "user", "csrf_token", "join")
+
 
 @frappe.whitelist()
 @frappe.read_only()
@@ -224,8 +226,9 @@ def update_wildcard_field_param(data):
 
 
 def clean_params(data):
-	for param in ("cmd", "data", "ignore_permissions", "view", "user", "csrf_token", "join"):
-		data.pop(param, None)
+	for param in DISALLOWED_PARAMS:
+		if param in data:
+			del data[param]
 
 
 def parse_json(data):
@@ -291,7 +294,7 @@ def compress(data, args=None):
 	return {"keys": keys, "values": values, "user_info": user_info}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST", "PUT"])
 def save_report(name, doctype, report_settings):
 	"""Save reports of type Report Builder from Report View"""
 
@@ -321,7 +324,7 @@ def save_report(name, doctype, report_settings):
 	return report.name
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST", "DELETE"])
 def delete_report(name):
 	"""Delete reports of type Report Builder from Report View"""
 
@@ -353,13 +356,15 @@ def export_query():
 	form_params["limit_page_length"] = None
 	form_params["as_list"] = True
 	doctype = form_params.pop("doctype")
+	if isinstance(form_params["fields"], list):
+		form_params["fields"].append("owner")
+	elif isinstance(form_params["fields"], tuple):
+		form_params["fields"] = form_params["fields"] + ("owner",)
 	file_format_type = form_params.pop("file_format_type")
 	title = form_params.pop("title", doctype)
 	csv_params = pop_csv_params(form_params)
 	add_totals_row = 1 if form_params.pop("add_totals_row", None) == "1" else None
 	translate_values = 1 if form_params.pop("translate_values", None) == "1" else None
-
-	frappe.permissions.can_export(doctype, raise_exception=True)
 
 	if selection := form_params.pop("selected_items", None):
 		form_params["filters"] = {"name": ("in", json.loads(selection))}
@@ -373,6 +378,16 @@ def export_query():
 
 	db_query = DatabaseQuery(doctype)
 	ret = db_query.execute(**form_params)
+
+	if not frappe.permissions.can_export(doctype):
+		if frappe.permissions.can_export(doctype, is_owner=True):
+			for row in ret:
+				if row[-1] != frappe.session.user:
+					raise frappe.PermissionError(
+						_("You are not allowed to export {} doctype").format(doctype)
+					)
+		else:
+			raise frappe.PermissionError(_("You are not allowed to export {} doctype").format(doctype))
 
 	if add_totals_row:
 		ret = append_totals_row(ret)
@@ -393,7 +408,7 @@ def export_query():
 				_(value) if translatable_fields[idx] else value for idx, value in enumerate(row)
 			]
 			processed_data.append(processed_row)
-			data.extend(processed_data)
+		data.extend(processed_data)
 
 	data = handle_duration_fieldtype_values(doctype, data, db_query.fields)
 
@@ -519,7 +534,7 @@ def parse_field(field: str) -> tuple[str | None, str]:
 	return None, key.strip("`")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST", "DELETE"])
 def delete_items():
 	"""delete selected items"""
 	import json
